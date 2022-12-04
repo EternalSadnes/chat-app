@@ -1,5 +1,6 @@
 package com.eternal.chatapp.service.impl;
 
+import com.eternal.chatapp.model.CustomUsrDetails;
 import com.eternal.chatapp.model.User;
 import com.eternal.chatapp.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -12,14 +13,11 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class UserDetailsServiceImpl implements UserDetailsService {
 
-    private final UserRepository userRepository;
+    private final UserRepository userRepo;
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByUsername(username);
-        if (user == null) {
-            throw new UsernameNotFoundException(String.format("User with username '%s' has not been found.", username));
-        }
-        return user;
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        User user = userRepo.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("User with email = " + email + " not exist!"));
+        return new CustomUsrDetails(user);
     }
 }

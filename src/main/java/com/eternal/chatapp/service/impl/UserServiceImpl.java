@@ -1,13 +1,12 @@
 package com.eternal.chatapp.service.impl;
 
-import java.util.List;
+import java.util.Set;
 
 import com.eternal.chatapp.dto.AuthRequestDto;
 import com.eternal.chatapp.exception.RoleNotFoundException;
 import com.eternal.chatapp.exception.UserAlreadyExistException;
 import com.eternal.chatapp.model.Role;
 import com.eternal.chatapp.model.User;
-import com.eternal.chatapp.model.UserRole;
 import com.eternal.chatapp.repository.RoleRepository;
 import com.eternal.chatapp.repository.UserRepository;
 import com.eternal.chatapp.service.UserService;
@@ -32,20 +31,19 @@ public class UserServiceImpl implements UserService {
         if (isUserExist(authRequestDto.getUsername())) {
             throw UserAlreadyExistException.fromUsername(authRequestDto.getUsername());
         }
-        Role userRole = roleRepository.findByRoleName(UserRole.ROLE_USER)
-                .orElseThrow(() -> RoleNotFoundException.fromRoleName(UserRole.ROLE_USER));
+        Role userRole = roleRepository.findByRoleName("SCOPE_usr")
+                .orElseThrow(() -> RoleNotFoundException.fromRoleName("USER"));
 
         User userToRegister = new User();
-        userToRegister.setEnabled(true);
-        userToRegister.setUsername(authRequestDto.getUsername());
+        userToRegister.setEmail(authRequestDto.getUsername());
         userToRegister.setPassword(encodePassword(authRequestDto.getPassword()));
-        userToRegister.setRoles(List.of(userRole));
+        userToRegister.setRoles(Set.of(userRole));
         return userRepository.save(userToRegister);
     }
 
     @Override
-    public boolean isUserExist(String username) {
-        return userRepository.existsByUsername(username);
+    public boolean isUserExist(String email) {
+        return userRepository.existsByEmail(email);
     }
 
     private String encodePassword(String password) {

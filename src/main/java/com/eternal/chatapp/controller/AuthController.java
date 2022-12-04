@@ -1,76 +1,81 @@
 package com.eternal.chatapp.controller;
 
 import com.eternal.chatapp.dto.AuthRequestDto;
+import com.eternal.chatapp.model.CustomUsrDetails;
 import com.eternal.chatapp.model.User;
 import com.eternal.chatapp.service.JwtTokenService;
 import com.eternal.chatapp.service.UserService;
+import com.eternal.chatapp.service.impl.UserDetailsServiceImpl;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/auth")
 @RequiredArgsConstructor
 public class AuthController {
     private final JwtTokenService tokenService;
     private final AuthenticationManager authManager;
-    private final UserDetailsService usrDetailsService;
+    private final UserDetailsServiceImpl usrDetailsService;
 
     private final UserService userService;
 
     record LoginRequest(String username, String password) {
     }
 
-    @PostMapping("/sign-in")
-    public TokensResponse login(@RequestBody LoginRequest request) {
+    record LoginResponse(String message, String access_jwt_token, String refresh_jwt_token) {
+    }
+
+    @PostMapping("/login")
+    public LoginResponse login(@RequestBody LoginRequest request) {
 
         UsernamePasswordAuthenticationToken authenticationToken =
                 new UsernamePasswordAuthenticationToken(request.username, request.password);
-        authManager.authenticate(authenticationToken);
+        Authentication auth = authManager.authenticate(authenticationToken);
 
-        var user = (User) usrDetailsService.loadUserByUsername(request.username);
-        String accessToken = tokenService.generateAccessToken(user);
-        String refreshToken = tokenService.generateRefreshToken(user);
+        CustomUsrDetails user = (CustomUsrDetails) usrDetailsService.loadUserByUsername(request.username);
+        String access_token = tokenService.generateAccessToken(user);
+        String refresh_token = tokenService.generateRefreshToken(user);
 
-        return new TokensResponse(accessToken, refreshToken);
+        return new LoginResponse("User with email = " + request.username + " successfully logined!"
+
+                , access_token, refresh_token);
     }
 
-    record SignUpRequest(String username, String password) {
+    @PostMapping("/register")
+    public RefreshTokenResponse register(@RequestBody LoginRequest loginRequest) {
+        User registered = userService.register(new AuthRequestDto(loginRequest.username(), loginRequest.password()));
+
+        UsernamePasswordAuthenticationToken authenticationToken =
+                new UsernamePasswordAuthenticationToken(registered.getEmail(), registered.getPassword());
+        Authentication auth = authManager.authenticate(authenticationToken);
+
+        CustomUsrDetails user = (CustomUsrDetails) usrDetailsService.loadUserByUsername(loginRequest.username);
+        String access_token = tokenService.generateAccessToken(user);
+        String refresh_token = tokenService.generateRefreshToken(user);
+
+        return new RefreshTokenResponse(access_token, refresh_token);
     }
 
-    @PostMapping("/sign-up")
-    public TokensResponse signUp(@RequestBody SignUpRequest signUpRequest) {
-        User registeredUser = userService.register(new AuthRequestDto(signUpRequest.username(), signUpRequest.password()));
-
-        String accessToken = tokenService.generateAccessToken(registeredUser);
-        String refreshToken = tokenService.generateRefreshToken(registeredUser);
-
-        return new TokensResponse(accessToken, refreshToken);
+    record RefreshTokenResponse(String access_jwt_token, String refresh_jwt_token) {
     }
 
-    @PreAuthorize("hasRole('REFRESH_TOKEN')")
     @GetMapping("/token/refresh")
-    public TokensResponse refreshToken(HttpServletRequest request) {
+    public RefreshTokenResponse refreshToken(HttpServletRequest request) {
         String headerAuth = request.getHeader("Authorization");
-        String previousRefreshToken = headerAuth.substring(7);
+        String refreshToken = headerAuth.substring(7, headerAuth.length());
 
-        String username = tokenService.parseToken(previousRefreshToken);
-        var user = (User) usrDetailsService.loadUserByUsername(username);
-        String accessToken = tokenService.generateAccessToken(user);
-        String refreshToken = tokenService.generateRefreshToken(user);
+        String email = tokenService.parseToken(refreshToken);
+        CustomUsrDetails user = (CustomUsrDetails) usrDetailsService.loadUserByUsername(email);
+        String access_token = tokenService.generateAccessToken(user);
+        String refresh_token = tokenService.generateRefreshToken(user);
 
-        return new TokensResponse(accessToken, refreshToken);
-    }
-
-    record TokensResponse(String accessToken, String refreshToken) {
+        return new RefreshTokenResponse(access_token, refresh_token);
     }
 
 }

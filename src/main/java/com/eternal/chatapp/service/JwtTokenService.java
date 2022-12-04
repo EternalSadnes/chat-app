@@ -1,11 +1,11 @@
 package com.eternal.chatapp.service;
 
-import com.eternal.chatapp.model.User;
+import com.eternal.chatapp.model.CustomUsrDetails;
 
 public interface JwtTokenService {
-    String generateAccessToken(User user);
+    String generateAccessToken(CustomUsrDetails usrDetails);
 
-    String generateRefreshToken(User user);
+    String generateRefreshToken(CustomUsrDetails usrDetails);
 
     String parseToken(String token);
 }

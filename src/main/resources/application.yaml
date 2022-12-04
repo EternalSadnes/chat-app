@@ -3,18 +3,15 @@ spring:
     url: jdbc:postgresql://localhost:5432/chat
     username: eternal
     password: pass
-  security:
-    user:
-      name: eternal
-      password: pass
   jpa:
+    show-sql: false
+    generate-ddl: true
     hibernate:
-      ddl-auto: none
-
-
-server:
-  servlet:
-    context-path: /api/v1
+      ddl-auto: update
+    defer-datasource-initialization: true
+  sql:
+    init:
+      mode: always
 
 app:
   chat:
@@ -30,3 +27,7 @@ management:
     web:
       exposure:
         include: mappings
+
+server:
+  error:
+    include-message: always
