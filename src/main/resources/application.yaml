@@ -1,0 +1,32 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/chat
+    username: eternal
+    password: pass
+  security:
+    user:
+      name: eternal
+      password: pass
+  jpa:
+    hibernate:
+      ddl-auto: none
+
+
+server:
+  servlet:
+    context-path: /api/v1
+
+app:
+  chat:
+    jwt:
+      private:
+        key: classpath:keys/private.pem
+      public:
+        key: classpath:keys/public.pem
+      expiration: 500
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: mappings

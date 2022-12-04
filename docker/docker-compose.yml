@@ -1,0 +1,13 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:alpine3.17
+    container_name: postgres
+    environment:
+      POSTGRES_USER: eternal
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: chat
+    ports:
+      - "5432:5432"
+    restart: always
