@@ -9,7 +9,7 @@ spring:
       password: pass
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: update
 
 
 server:
