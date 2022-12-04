@@ -3,7 +3,6 @@ package com.eternal.chatapp.service.impl;
 import java.text.ParseException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.stream.Collectors;
 
 import com.eternal.chatapp.model.User;
 import com.eternal.chatapp.service.JwtTokenService;
@@ -24,9 +23,9 @@ public class JwtTokenServiceImpl implements JwtTokenService {
     @Override
     public String generateAccessToken(User user) {
         Instant now = Instant.now();
-        String scope = user.getAuthorities().stream()
+        String[] scope = user.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
-                .collect(Collectors.joining(" "));
+                .toArray(String[]::new);
 
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuer("self")

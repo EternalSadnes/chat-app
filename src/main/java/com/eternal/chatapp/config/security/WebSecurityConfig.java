@@ -3,6 +3,7 @@ package com.eternal.chatapp.config.security;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 
+import com.eternal.chatapp.service.impl.UserDetailsServiceImpl;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
@@ -12,8 +13,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.ProviderManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.oauth2.server.resource.OAuth2ResourceServerConfigurer;
@@ -36,6 +40,7 @@ import org.springframework.web.filter.CorsFilter;
 @Configuration
 @RequiredArgsConstructor
 @EnableWebSecurity
+@EnableMethodSecurity
 public class WebSecurityConfig {
 
     @Value("${app.chat.jwt.public.key}")
@@ -59,12 +64,21 @@ public class WebSecurityConfig {
         http.authorizeHttpRequests()
                 .requestMatchers("/auth/sign-in").permitAll()
                 .requestMatchers("/auth/sign-up").permitAll()
+                .requestMatchers("/hello").hasRole("USER")
                 .anyRequest().authenticated()
                 .and()
                 .httpBasic(Customizer.withDefaults())
                 .oauth2ResourceServer(OAuth2ResourceServerConfigurer::jwt);
 
         return http.build();
+    }
+
+    @Bean
+    public AuthenticationManager authManager(UserDetailsServiceImpl userDetailsService) {
+        var authProvider = new DaoAuthenticationProvider();
+        authProvider.setUserDetailsService(userDetailsService);
+        authProvider.setPasswordEncoder(passwordEncoder());
+        return new ProviderManager(authProvider);
     }
 
     @SneakyThrows
@@ -84,7 +98,7 @@ public class WebSecurityConfig {
     @Bean
     public JwtAuthenticationConverter jwtAuthenticationConverter() {
         var jwtGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
-        jwtGrantedAuthoritiesConverter.setAuthoritiesClaimName("roles");
+        jwtGrantedAuthoritiesConverter.setAuthoritiesClaimName("scope");
         jwtGrantedAuthoritiesConverter.setAuthorityPrefix("ROLE_");
 
         var jwtAuthenticationConverter = new JwtAuthenticationConverter();
