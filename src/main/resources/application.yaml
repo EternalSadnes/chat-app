@@ -23,7 +23,10 @@ app:
         key: classpath:keys/private.pem
       public:
         key: classpath:keys/public.pem
-      expiration: 500
+      access-token:
+        expiration: 15
+      refresh-token:
+        expiration: 30
 
 management:
   endpoints:

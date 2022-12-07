@@ -64,8 +64,6 @@ public class WebSecurityConfig {
         http.authorizeHttpRequests()
                 .requestMatchers("/auth/sign-in").permitAll()
                 .requestMatchers("/auth/sign-up").permitAll()
-                .requestMatchers("/hello").hasRole("ROLE_USER")
-//                .requestMatchers("/auth/token/refresh").hasRole("ROLE_USER")
                 .anyRequest().authenticated()
                 .and()
                 .httpBasic(Customizer.withDefaults())

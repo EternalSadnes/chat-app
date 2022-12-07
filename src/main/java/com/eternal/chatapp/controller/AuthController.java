@@ -56,7 +56,7 @@ public class AuthController {
         return new TokensResponse(accessToken, refreshToken);
     }
 
-    @PreAuthorize("hasRole('ROLE_USER')")
+    @PreAuthorize("hasRole('REFRESH_TOKEN')")
     @GetMapping("/token/refresh")
     public TokensResponse refreshToken(HttpServletRequest request) {
         String headerAuth = request.getHeader("Authorization");
